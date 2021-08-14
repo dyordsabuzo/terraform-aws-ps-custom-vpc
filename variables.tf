@@ -1,8 +1,3 @@
-variable "region" {
-  description = "AWS region where resources are created"
-  type        = string
-}
-
 variable "vpc_cidr_block" {
   type        = string
   description = "CIDR block for VPC"
@@ -35,4 +30,10 @@ variable "private_subnets" {
   type        = list(any)
   description = "List of cidr blocks for private subnets"
   default     = []
+}
+
+variable "tags" {
+  type        = map(any)
+  description = "Map of tags passed to the module"
+  default     = {}
 }
