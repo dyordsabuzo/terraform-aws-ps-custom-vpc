@@ -24,3 +24,15 @@ variable "availability_zone_count" {
   description = "Number of availability zones to setup"
   default     = 1
 }
+
+variable "single_nat_gateway" {
+  type        = bool
+  description = "Flag to indicate if single nat gateway is true"
+  default     = false
+}
+
+variable "private_subnets" {
+  type        = list(any)
+  description = "List of cidr blocks for private subnets"
+  default     = []
+}
