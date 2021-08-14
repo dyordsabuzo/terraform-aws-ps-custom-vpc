@@ -22,9 +22,9 @@ resource "aws_route_table" "public_route_table" {
 }
 
 resource "aws_route" "public_route" {
-  route_table_id         = aws_route_table.public_route_table
+  route_table_id         = aws_route_table.public_route_table.id
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.internet_gateway
+  gateway_id             = aws_internet_gateway.internet_gateway.id
 
   timeouts {
     create = "5m"
@@ -65,7 +65,9 @@ resource "aws_eip" "nat_elastic_ip" {
 resource "aws_nat_gateway" "nat_gateway" {
   for_each      = aws_eip.nat_elastic_ip
   allocation_id = each.value.id
-  subnet_id     = element(local.public_subnet_ids, index(aws_eip.nat_elastic_ip, each.key))
+  subnet_id = element(local.public_subnet_ids,
+    index(keys(aws_eip.nat_elastic_ip), each.key)
+  )
 
   tags = merge(local.tags, {
     Name = format("%s-%s", var.resource_identifier, each.key)
@@ -77,7 +79,7 @@ resource "aws_nat_gateway" "nat_gateway" {
 }
 
 resource "aws_route_table" "private_route_table" {
-  for_each = local.azs
+  for_each = toset(local.azs)
   vpc_id   = aws_vpc.vpc.id
 
   tags = merge(local.tags, {
@@ -86,7 +88,7 @@ resource "aws_route_table" "private_route_table" {
 }
 
 resource "aws_route" "private_route" {
-  for_each               = local.azs
+  for_each               = toset(local.azs)
   destination_cidr_block = "0.0.0.0/0"
   route_table_id         = aws_route_table.private_route_table[each.key].id
   nat_gateway_id         = aws_nat_gateway.nat_gateway[each.key].id
@@ -108,7 +110,9 @@ resource "aws_subnet" "private_subnet" {
 }
 
 resource "aws_route_table_association" "private_route_association" {
-  for_each       = aws_subnet.private_subnet
-  subnet_id      = each.value.id
-  route_table_id = element(local.private_route_table_ids, index(aws_subnet.private_subnet, each.key))
+  for_each  = aws_subnet.private_subnet
+  subnet_id = each.value.id
+  route_table_id = element(local.private_route_table_ids,
+    index(keys(aws_subnet.private_subnet), each.key)
+  )
 }

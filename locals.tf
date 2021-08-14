@@ -1,9 +1,9 @@
 locals {
-  tags = {
+  tags = merge(var.tags, {
     created_by = "terraform"
-  }
+  })
 
-  azs = slice(data.aws_availability_zones.azs,
+  azs = slice(data.aws_availability_zones.azs.names,
     0,
     var.availability_zone_count
   )
