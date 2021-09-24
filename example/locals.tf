@@ -3,7 +3,7 @@ locals {
     created_by = "terraform"
   }
 
-  az_count = 3
+  az_count = 2
 
   vpc_cidr = "10.11.0.0/20"
 
