@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/bash -e
 
 base_path=`pwd`
 processed_paths=()
