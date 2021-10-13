@@ -1,4 +1,4 @@
 **/.terraform/**
-.terraform.lock.hcl
+**/.terragrunt-cache/**
 **/.tfplan
 *tfstate*
