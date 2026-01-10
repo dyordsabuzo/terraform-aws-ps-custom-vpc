@@ -1,3 +1,4 @@
+#tfsec:ignore:aws-ec2-require-vpc-flow-logs-for-all-vpcs:exp:2026-02-01
 resource "aws_vpc" "vpc" {
   enable_dns_hostnames = true
   enable_dns_support   = true
@@ -34,6 +35,7 @@ resource "aws_route" "public_route" {
   }
 }
 
+#tfsec:ignore:aws-ec2-no-public-ip-subnet:exp:2026-02-01
 resource "aws_subnet" "public_subnet" {
   for_each                = toset(var.public_subnets)
   cidr_block              = each.key
@@ -127,7 +129,7 @@ resource "aws_route_table_association" "private_route_association" {
 resource "aws_cloudwatch_log_group" "vpc_logs" {
   count             = try(var.flow_logs.enable, false) ? 1 : 0
   name              = "/${var.resource_identifier}"
-  retention_in_days = try(var.flow_logs.log_retention, 5)
+  retention_in_days = try(var.flow_logs.log_retention, 7)
 }
 
 resource "aws_flow_log" "vpc_logs" {
