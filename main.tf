@@ -44,10 +44,12 @@ resource "aws_subnet" "public_subnet" {
     local.azs,
     index(var.public_subnets, each.key)
   )
+
   tags = {
     Name = format("%s-public-%s",
       var.resource_identifier,
     index(var.public_subnets, each.key))
+    role = "public"
   }
 }
 
@@ -110,6 +112,7 @@ resource "aws_subnet" "private_subnet" {
 
   tags = {
     Name = format("%s-private-%s", var.resource_identifier, index(var.private_subnets, each.key))
+    role = "private"
   }
 }
 
