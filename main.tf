@@ -132,8 +132,8 @@ resource "aws_cloudwatch_log_group" "vpc_logs" {
 
 resource "aws_flow_log" "vpc_logs" {
   count           = try(var.flow_logs.enable, false) ? 1 : 0
-  iam_role_arn    = aws_iam_role.example.arn
-  log_destination = aws_cloudwatch_log_group.vpc_logs.arn
+  iam_role_arn    = aws_iam_role.vpc_logs[0].arn
+  log_destination = aws_cloudwatch_log_group.vpc_logs[0].arn
   vpc_id          = aws_vpc.vpc.id
   traffic_type    = "ALL"
 }
