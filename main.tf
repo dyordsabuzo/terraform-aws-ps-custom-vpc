@@ -123,3 +123,30 @@ resource "aws_route_table_association" "private_route_association" {
     index(keys(aws_subnet.private_subnet), each.key)
   )
 }
+
+resource "aws_cloudwatch_log_group" "vpc_logs" {
+  count             = try(var.flow_logs.enable, false) ? 1 : 0
+  name              = "/${var.resource_identifier}"
+  retention_in_days = try(var.flow_logs.log_retention, 5)
+}
+
+resource "aws_flow_log" "vpc_logs" {
+  count           = try(var.flow_logs.enable, false) ? 1 : 0
+  iam_role_arn    = aws_iam_role.example.arn
+  log_destination = aws_cloudwatch_log_group.vpc_logs.arn
+  vpc_id          = aws_vpc.vpc.id
+  traffic_type    = "ALL"
+}
+
+resource "aws_iam_role" "vpc_logs" {
+  count              = try(var.flow_logs.enable, false) ? 1 : 0
+  name               = "vpc-logs-role"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_iam_role_policy" "vpc_logs" {
+  count  = try(var.flow_logs.enable, false) ? 1 : 0
+  name   = "vpc-logs-policy"
+  role   = aws_iam_role.vpc_logs[0].id
+  policy = data.aws_iam_policy_document.vpc_logs.json
+}
