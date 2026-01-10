@@ -47,7 +47,3 @@ variable "flow_logs" {
     enabled = false
   }
 }
-
-variable "" {
-
-}
