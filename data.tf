@@ -3,7 +3,7 @@ data "aws_availability_zones" "azs" {
 }
 
 
-data "aws_iam_policy_document" "vpc_logs" {
+data "aws_iam_policy_document" "assume_role" {
   statement {
     effect = "Allow"
 
