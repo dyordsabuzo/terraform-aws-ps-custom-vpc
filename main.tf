@@ -2,23 +2,26 @@ resource "aws_vpc" "vpc" {
   enable_dns_hostnames = true
   enable_dns_support   = true
   cidr_block           = var.vpc_cidr_block
-  tags = merge(local.tags, {
+
+  tags = {
     Name = var.resource_identifier
-  })
+  }
 }
 
 resource "aws_internet_gateway" "internet_gateway" {
   vpc_id = aws_vpc.vpc.id
-  tags = merge(local.tags, {
+
+  tags = {
     Name = var.resource_identifier
-  })
+  }
 }
 
 resource "aws_route_table" "public_route_table" {
   vpc_id = aws_vpc.vpc.id
-  tags = merge(local.tags, {
+
+  tags = {
     Name = var.resource_identifier
-  })
+  }
 }
 
 resource "aws_route" "public_route" {
@@ -36,15 +39,16 @@ resource "aws_subnet" "public_subnet" {
   cidr_block              = each.key
   vpc_id                  = aws_vpc.vpc.id
   map_public_ip_on_launch = true
+
   availability_zone = element(
     local.azs,
     index(var.public_subnets, each.key)
   )
-  tags = merge(local.tags, {
+  tags = {
     Name = format("%s-public-%s",
       var.resource_identifier,
     index(var.public_subnets, each.key))
-  })
+  }
 }
 
 resource "aws_route_table_association" "public_rt_association" {
@@ -55,11 +59,11 @@ resource "aws_route_table_association" "public_rt_association" {
 
 resource "aws_eip" "nat_elastic_ip" {
   for_each = toset(local.nat_azs)
-  vpc      = true
+  domain   = "vpc"
 
-  tags = merge(local.tags, {
+  tags = {
     Name = format("%s-%s", var.resource_identifier, each.key)
-  })
+  }
 }
 
 resource "aws_nat_gateway" "nat_gateway" {
@@ -69,9 +73,9 @@ resource "aws_nat_gateway" "nat_gateway" {
     index(keys(aws_eip.nat_elastic_ip), each.key)
   )
 
-  tags = merge(local.tags, {
+  tags = {
     Name = format("%s-%s", var.resource_identifier, each.key)
-  })
+  }
 
   depends_on = [
     aws_internet_gateway.internet_gateway
@@ -82,9 +86,9 @@ resource "aws_route_table" "private_route_table" {
   for_each = toset(local.azs)
   vpc_id   = aws_vpc.vpc.id
 
-  tags = merge(local.tags, {
+  tags = {
     Name = format("%s-private-%s", var.resource_identifier, each.key)
-  })
+  }
 }
 
 resource "aws_route" "private_route" {
@@ -104,9 +108,9 @@ resource "aws_subnet" "private_subnet" {
   cidr_block        = each.key
   availability_zone = element(local.azs, index(var.private_subnets, each.key))
 
-  tags = merge(local.tags, {
+  tags = {
     Name = format("%s-private-%s", var.resource_identifier, index(var.private_subnets, each.key))
-  })
+  }
 }
 
 resource "aws_route_table_association" "private_route_association" {

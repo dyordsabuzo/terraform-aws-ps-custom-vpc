@@ -32,8 +32,7 @@ variable "private_subnets" {
   default     = []
 }
 
-variable "tags" {
-  type        = map(any)
-  description = "Map of tags passed to the module"
-  default     = {}
+variable "region" {
+  type        = string
+  description = "AWS region where resources are created in"
 }
