@@ -4,25 +4,25 @@ resource "aws_vpc" "vpc" {
   enable_dns_support   = true
   cidr_block           = var.vpc_cidr_block
 
-  tags = {
+  tags = merge(local.tags, {
     Name = var.resource_identifier
-  }
+  })
 }
 
 resource "aws_internet_gateway" "internet_gateway" {
   vpc_id = aws_vpc.vpc.id
 
-  tags = {
+  tags = merge(local.tags, {
     Name = var.resource_identifier
-  }
+  })
 }
 
 resource "aws_route_table" "public_route_table" {
   vpc_id = aws_vpc.vpc.id
 
-  tags = {
+  tags = merge(local.tags, {
     Name = var.resource_identifier
-  }
+  })
 }
 
 resource "aws_route" "public_route" {
@@ -33,6 +33,7 @@ resource "aws_route" "public_route" {
   timeouts {
     create = "5m"
   }
+  tags = local.tags
 }
 
 #tfsec:ignore:aws-ec2-no-public-ip-subnet:exp:2026-02-01
@@ -47,27 +48,28 @@ resource "aws_subnet" "public_subnet" {
     index(var.public_subnets, each.key)
   )
 
-  tags = {
+  tags = merge(local.tags, {
     Name = format("%s-public-%s",
       var.resource_identifier,
     index(var.public_subnets, each.key))
     role = "public"
-  }
+  })
 }
 
 resource "aws_route_table_association" "public_rt_association" {
   for_each       = aws_subnet.public_subnet
   subnet_id      = each.value.id
   route_table_id = aws_route_table.public_route_table.id
+  tags = local.tags
 }
 
 resource "aws_eip" "nat_elastic_ip" {
   for_each = toset(local.nat_azs)
   domain   = "vpc"
 
-  tags = {
+  tags = merge(local.tags, {
     Name = format("%s-%s", var.resource_identifier, each.key)
-  }
+  })
 }
 
 resource "aws_nat_gateway" "nat_gateway" {
@@ -77,9 +79,9 @@ resource "aws_nat_gateway" "nat_gateway" {
     index(keys(aws_eip.nat_elastic_ip), each.key)
   )
 
-  tags = {
+  tags = merge(local.tags, {
     Name = format("%s-%s", var.resource_identifier, each.key)
-  }
+  })
 
   depends_on = [
     aws_internet_gateway.internet_gateway
@@ -90,9 +92,9 @@ resource "aws_route_table" "private_route_table" {
   for_each = toset(local.azs)
   vpc_id   = aws_vpc.vpc.id
 
-  tags = {
+  tags = merge(local.tags, {
     Name = format("%s-private-%s", var.resource_identifier, each.key)
-  }
+  })
 }
 
 resource "aws_route" "private_route" {
@@ -100,6 +102,7 @@ resource "aws_route" "private_route" {
   destination_cidr_block = "0.0.0.0/0"
   route_table_id         = aws_route_table.private_route_table[each.key].id
   nat_gateway_id         = aws_nat_gateway.nat_gateway[each.key].id
+  tags                   = local.tags
 
   timeouts {
     create = "5m"
@@ -112,10 +115,10 @@ resource "aws_subnet" "private_subnet" {
   cidr_block        = each.key
   availability_zone = element(local.azs, index(var.private_subnets, each.key))
 
-  tags = {
+  tags = merge(local.tags, {
     Name = format("%s-private-%s", var.resource_identifier, index(var.private_subnets, each.key))
     role = "private"
-  }
+  })
 }
 
 resource "aws_route_table_association" "private_route_association" {
@@ -124,12 +127,14 @@ resource "aws_route_table_association" "private_route_association" {
   route_table_id = element(local.private_route_table_ids,
     index(keys(aws_subnet.private_subnet), each.key)
   )
+  tags = local.tags
 }
 
 resource "aws_cloudwatch_log_group" "vpc_logs" {
   count             = try(var.flow_logs.enable, false) ? 1 : 0
   name              = "/${var.resource_identifier}"
   retention_in_days = try(var.flow_logs.log_retention, 7)
+  tags              = local.tags
 }
 
 resource "aws_flow_log" "vpc_logs" {
@@ -138,12 +143,14 @@ resource "aws_flow_log" "vpc_logs" {
   log_destination = aws_cloudwatch_log_group.vpc_logs[0].arn
   vpc_id          = aws_vpc.vpc.id
   traffic_type    = "ALL"
+  tags            = local.tags
 }
 
 resource "aws_iam_role" "vpc_logs" {
   count              = try(var.flow_logs.enable, false) ? 1 : 0
   name               = "vpc-logs-role"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
+  tags               = local.tags
 }
 
 resource "aws_iam_role_policy" "vpc_logs" {
@@ -151,4 +158,5 @@ resource "aws_iam_role_policy" "vpc_logs" {
   name   = "vpc-logs-policy"
   role   = aws_iam_role.vpc_logs[0].id
   policy = data.aws_iam_policy_document.vpc_logs.json
+  tags   = local.tags
 }

@@ -10,4 +10,10 @@ locals {
   public_subnet_ids = [for key, public_subnet in aws_subnet.public_subnet : public_subnet.id]
 
   private_route_table_ids = [for key, route_table in aws_route_table.private_route_table : route_table.id]
+
+  tags = {
+    managed_by     = "terraform"
+    module_created = true
+    module_name    = "terraform-aws-ps-custom-vpc"
+  }
 }

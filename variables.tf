@@ -32,11 +32,6 @@ variable "private_subnets" {
   default     = []
 }
 
-variable "region" {
-  type        = string
-  description = "AWS region where resources are created in"
-}
-
 variable "flow_logs" {
   description = "Flow logs settings"
   type = object({
