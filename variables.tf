@@ -17,7 +17,7 @@ variable "public_subnets" {
 variable "availability_zone_count" {
   type        = number
   description = "Number of availability zones to setup"
-  default     = 1
+  default     = 2
 }
 
 variable "single_nat_gateway" {
