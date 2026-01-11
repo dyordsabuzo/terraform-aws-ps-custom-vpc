@@ -33,7 +33,6 @@ resource "aws_route" "public_route" {
   timeouts {
     create = "5m"
   }
-  tags = local.tags
 }
 
 #tfsec:ignore:aws-ec2-no-public-ip-subnet:exp:2026-02-01
@@ -60,7 +59,6 @@ resource "aws_route_table_association" "public_rt_association" {
   for_each       = aws_subnet.public_subnet
   subnet_id      = each.value.id
   route_table_id = aws_route_table.public_route_table.id
-  tags = local.tags
 }
 
 resource "aws_eip" "nat_elastic_ip" {
@@ -102,7 +100,6 @@ resource "aws_route" "private_route" {
   destination_cidr_block = "0.0.0.0/0"
   route_table_id         = aws_route_table.private_route_table[each.key].id
   nat_gateway_id         = aws_nat_gateway.nat_gateway[each.key].id
-  tags                   = local.tags
 
   timeouts {
     create = "5m"
@@ -127,7 +124,6 @@ resource "aws_route_table_association" "private_route_association" {
   route_table_id = element(local.private_route_table_ids,
     index(keys(aws_subnet.private_subnet), each.key)
   )
-  tags = local.tags
 }
 
 resource "aws_cloudwatch_log_group" "vpc_logs" {
@@ -158,5 +154,4 @@ resource "aws_iam_role_policy" "vpc_logs" {
   name   = "vpc-logs-policy"
   role   = aws_iam_role.vpc_logs[0].id
   policy = data.aws_iam_policy_document.vpc_logs.json
-  tags   = local.tags
 }
